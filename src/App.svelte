@@ -70,7 +70,7 @@
       const id = (history.state && history.state.pageId) || pageIdFromHash() || getHomeId()
       void showPage(id)
     }
-    window.addEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, true)
     window.addEventListener('popstate', onPop)
     const stopWatch = watchPageTitle((id, title) => {
       if (id === pageId) {
@@ -91,7 +91,7 @@
       })
 
     return () => {
-      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', onKey, true)
       window.removeEventListener('popstate', onPop)
       stopWatch()
     }

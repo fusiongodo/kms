@@ -26,10 +26,6 @@ export function editorKeymap(hooks: EditorHooks) {
     'Mod-i': toggleMark(schema.marks.em),
     Enter: chainCommands(openSelectedPage(hooks.onOpenPage), splitBlockWithNewId()),
     ArrowDown: skipCollapsedToggleBody(1),
-    'Alt-ArrowLeft': () => {
-      hooks.goBack()
-      return true
-    },
     'Shift-Enter': insertHardBreak(),
     Tab: (state, dispatch, view) => {
       indentBlock()(state, dispatch, view)

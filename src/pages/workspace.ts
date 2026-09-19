@@ -22,6 +22,7 @@ let pagesMap: Y.Map<string> | null = null
 let metaMap: Y.Map<string> | null = null
 let homeId = ''
 let navDepth = 0
+let backInFlight = false
 
 export function pageUrl(id: string) {
   return `#/p/${id}`
@@ -116,13 +117,15 @@ export function canGoBack() {
 }
 
 export function goBack() {
-  if (navDepth < 1) return false
+  if (navDepth < 1 || backInFlight) return false
+  backInFlight = true
   history.back()
   return true
 }
 
 export function notePopState() {
   navDepth = Math.max(0, navDepth - 1)
+  backInFlight = false
 }
 
 async function migrateLegacyHome(id: string) {
