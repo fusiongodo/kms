@@ -1,4 +1,4 @@
-# Local page
+# kms
 
 A local block editor for one Ubuntu machine. Pages live in this browser via IndexedDB. There is no server and no sync.
 
