@@ -50,10 +50,27 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
-.brand {
+.back {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 650 13px/1 var(--ui);
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.back:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.current-title {
   font-weight: 650;
   color: var(--ink);
-  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 40vw;
 }
 
 .status[data-ready='true'] {
@@ -205,6 +222,35 @@ body {
 
 .ProseMirror .toggle.is-collapsed .toggle-body {
   display: none;
+}
+
+.ProseMirror .page-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  font: 16px/1.4 var(--ui);
+  color: var(--ink);
+  background: #fff;
+}
+
+.ProseMirror .page-link:hover,
+.ProseMirror .page-link:focus {
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.ProseMirror .page-link-icon {
+  color: var(--caret);
+  font-size: 14px;
+}
+
+.ProseMirror .page-link-title {
+  font-weight: 650;
 }
 
 .ProseMirror strong {

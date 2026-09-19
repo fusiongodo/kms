@@ -8,9 +8,11 @@ import { editorKeymap, yUndoKeymap } from './keymap'
 import { editorInputRules } from './inputrules'
 import { slashPlugin } from './slash'
 import { placeholderPlugin } from './placeholders'
-import { ToggleView } from './nodeviews'
+import { PageLinkView, ToggleView } from './nodeviews'
+import { titleSyncPlugin } from './titleSync'
+import type { EditorHooks } from './hooks'
 
-const protectedNodes = new Set(['paragraph', 'heading', 'list_item', 'toggle'])
+const protectedNodes = new Set(['paragraph', 'heading', 'list_item', 'toggle', 'page_link'])
 
 function loadDoc(fragment: XmlFragment) {
   try {
@@ -24,17 +26,18 @@ function loadDoc(fragment: XmlFragment) {
   return initProseMirrorDoc(fragment, schema)
 }
 
-export function createEditorView(mount: HTMLElement, fragment: XmlFragment) {
+export function createEditorView(mount: HTMLElement, fragment: XmlFragment, hooks: EditorHooks) {
   const { doc, mapping } = loadDoc(fragment)
   const state = EditorState.create({
     doc,
     schema,
     plugins: [
       slashPlugin(),
-      editorKeymap(),
+      editorKeymap(hooks),
       editorInputRules(),
       ensureBlockIds(),
       placeholderPlugin(),
+      titleSyncPlugin(hooks.pageId),
       ySyncPlugin(fragment, { mapping }),
       yUndoPlugin({ protectedNodes }),
       yUndoKeymap(),
@@ -45,6 +48,7 @@ export function createEditorView(mount: HTMLElement, fragment: XmlFragment) {
     state,
     nodeViews: {
       toggle: (node, view, getPos) => new ToggleView(node, view, getPos),
+      page_link: (node, view, getPos) => new PageLinkView(node, view, getPos, hooks.onOpenPage),
     },
     attributes: {
       class: 'ProseMirror page-doc',

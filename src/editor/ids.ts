@@ -7,6 +7,7 @@ export const BLOCK_TYPES = new Set([
   'heading',
   'list_item',
   'toggle',
+  'page_link',
 ])
 
 export function newBlockId(): string {

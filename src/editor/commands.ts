@@ -1,7 +1,8 @@
-import { TextSelection, type Command, type EditorState, type Transaction } from 'prosemirror-state'
+import { NodeSelection, TextSelection, type Command, type EditorState, type Transaction } from 'prosemirror-state'
 import { Fragment, type Node as PMNode, type NodeType, type ResolvedPos } from 'prosemirror-model'
 import { canSplit } from 'prosemirror-transform'
-import { schema, createParagraph, createToggle, isCollapsed } from './schema'
+import { schema, createParagraph, createToggle, createPageLink, isCollapsed } from './schema'
+import { createPage } from '../pages/workspace'
 import { newBlockId } from './ids'
 
 export function setBlockTypeKeepingId(
@@ -65,6 +66,37 @@ export function convertToToggle(): Command {
       tr.setSelection(TextSelection.create(tr.doc, titlePos))
       dispatch(tr.scrollIntoView())
     }
+    return true
+  }
+}
+
+export function convertToPageLink(): Command {
+  return (state, dispatch) => {
+    const { $from } = state.selection
+    const node = $from.parent
+    if (!node.type.isTextblock) return false
+    if (node.type === schema.nodes.toggle_title) return false
+
+    const title = node.textContent.trim() || 'Untitled'
+    const page = createPage(title)
+    const pos = $from.before()
+    const link = createPageLink(page.id, page.title, node.attrs.id || newBlockId())
+
+    if (dispatch) {
+      const tr = state.tr.replaceWith(pos, pos + node.nodeSize, [link, createParagraph()])
+      tr.setSelection(TextSelection.near(tr.doc.resolve(pos + link.nodeSize + 1)))
+      dispatch(tr.scrollIntoView())
+    }
+    return true
+  }
+}
+
+export function openSelectedPage(open: (pageId: string) => void): Command {
+  return (state) => {
+    if (!(state.selection instanceof NodeSelection)) return false
+    const node = state.selection.node
+    if (node.type !== schema.nodes.page_link || !node.attrs.pageId) return false
+    open(node.attrs.pageId)
     return true
   }
 }

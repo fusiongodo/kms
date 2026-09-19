@@ -1,5 +1,6 @@
 import type { Node as PMNode } from 'prosemirror-model'
 import type { EditorView, NodeView, ViewMutationRecord } from 'prosemirror-view'
+import { getPageTitle, watchPageTitle } from '../pages/workspace'
 import { toggleCollapsed } from './commands'
 import { isCollapsed } from './schema'
 
@@ -56,5 +57,73 @@ export class ToggleView implements NodeView {
 
   stopEvent(event: Event) {
     return this.caret === event.target || this.caret.contains(event.target as Node)
+  }
+}
+
+export class PageLinkView implements NodeView {
+  dom: HTMLElement
+  label: HTMLSpanElement
+  unwatch: () => void
+
+  constructor(
+    private node: PMNode,
+    _view: EditorView,
+    _getPos: () => number | undefined,
+    private openPage: (pageId: string) => void,
+  ) {
+    this.dom = document.createElement('div')
+    this.dom.className = 'block page-link'
+    this.dom.setAttribute('data-page-id', node.attrs.pageId ?? '')
+    this.dom.setAttribute('data-block-id', node.attrs.id ?? '')
+    this.dom.setAttribute('role', 'link')
+    this.dom.tabIndex = 0
+
+    const icon = document.createElement('span')
+    icon.className = 'page-link-icon'
+    icon.setAttribute('aria-hidden', 'true')
+    icon.textContent = '▸'
+
+    this.label = document.createElement('span')
+    this.label.className = 'page-link-title'
+
+    this.dom.append(icon, this.label)
+    this.paint(node.attrs.pageId, node.attrs.title)
+
+    this.dom.addEventListener('mousedown', (event) => {
+      event.preventDefault()
+    })
+    this.dom.addEventListener('click', (event) => {
+      event.preventDefault()
+      const pageId = this.node.attrs.pageId
+      if (pageId) this.openPage(pageId)
+    })
+
+    this.unwatch = watchPageTitle((id, title) => {
+      if (id === this.node.attrs.pageId) this.paint(id, title)
+    })
+  }
+
+  private paint(pageId: string | null, fallback: string) {
+    const title = (pageId && getPageTitle(pageId)) || fallback || 'Untitled'
+    this.label.textContent = title
+    this.dom.setAttribute('data-page-title', title)
+    this.dom.setAttribute('aria-label', `Open ${title}`)
+  }
+
+  update(node: PMNode) {
+    if (node.type.name !== 'page_link') return false
+    this.node = node
+    this.dom.setAttribute('data-page-id', node.attrs.pageId ?? '')
+    this.dom.setAttribute('data-block-id', node.attrs.id ?? '')
+    this.paint(node.attrs.pageId, node.attrs.title)
+    return true
+  }
+
+  ignoreMutation() {
+    return true
+  }
+
+  destroy() {
+    this.unwatch()
   }
 }

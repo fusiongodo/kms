@@ -1,7 +1,7 @@
 import { Plugin, PluginKey, TextSelection } from 'prosemirror-state'
 import type { EditorState, Transaction } from 'prosemirror-state'
 import type { EditorView } from 'prosemirror-view'
-import { convertToHeading, convertToToggle, wrapInBulletList } from './commands'
+import { convertToHeading, convertToPageLink, convertToToggle, wrapInBulletList } from './commands'
 
 export type SlashItem = {
   id: string
@@ -69,6 +69,13 @@ export const slashItems: SlashItem[] = [
     hint: '- ',
     aliases: ['bullet', 'list', 'ul'],
     run: (view, from, to) => applyType(view, from, to, wrapInBulletList()),
+  },
+  {
+    id: 'page',
+    label: 'Page',
+    hint: '/page',
+    aliases: ['page', 'link'],
+    run: (view, from, to) => applyType(view, from, to, convertToPageLink()),
   },
 ]
 

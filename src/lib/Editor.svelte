@@ -2,6 +2,7 @@
   import type { EditorView } from 'prosemirror-view'
   import type { XmlFragment } from 'yjs'
   import { createEditorView } from '../editor/createEditor'
+  import type { EditorHooks } from '../editor/hooks'
   import {
     filterSlashItems,
     slashKey,
@@ -9,7 +10,13 @@
     type SlashState,
   } from '../editor/slash'
 
-  let { fragment }: { fragment: XmlFragment } = $props()
+  let {
+    fragment,
+    hooks,
+  }: {
+    fragment: XmlFragment
+    hooks: EditorHooks
+  } = $props()
 
   let view: EditorView | undefined
   let slash: SlashState | undefined = $state()
@@ -32,7 +39,7 @@
   }
 
   function mountEditor(node: HTMLDivElement) {
-    const next = createEditorView(node, fragment)
+    const next = createEditorView(node, fragment, hooks)
     view = next
     const original = next.dispatch.bind(next)
     next.dispatch = (tr) => {

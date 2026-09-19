@@ -13,17 +13,23 @@ import { schema } from './schema'
 import {
   insertHardBreak,
   joinBackwardRespectingIds,
+  openSelectedPage,
   skipCollapsedToggleBody,
   splitBlockWithNewId,
 } from './commands'
 import { indentBlock, outdentBlock } from './indent'
+import type { EditorHooks } from './hooks'
 
-export function editorKeymap() {
+export function editorKeymap(hooks: EditorHooks) {
   return keymap({
     'Mod-b': toggleMark(schema.marks.strong),
     'Mod-i': toggleMark(schema.marks.em),
-    Enter: splitBlockWithNewId(),
+    Enter: chainCommands(openSelectedPage(hooks.onOpenPage), splitBlockWithNewId()),
     ArrowDown: skipCollapsedToggleBody(1),
+    'Alt-ArrowLeft': () => {
+      hooks.goBack()
+      return true
+    },
     'Shift-Enter': insertHardBreak(),
     Tab: (state, dispatch, view) => {
       indentBlock()(state, dispatch, view)

@@ -3,7 +3,6 @@ import { IndexeddbPersistence } from 'y-indexeddb'
 import { prosemirrorToYXmlFragment } from 'y-prosemirror'
 import { createEmptyDoc } from './schema'
 
-export const DOC_NAME = 'local-page'
 export const FRAGMENT_KEY = 'prosemirror'
 
 export type LocalDoc = {
@@ -42,13 +41,14 @@ function seedIfNeeded(fragment: Y.XmlFragment, title: Y.Text) {
   }
 }
 
-export function openLocalDoc(): LocalDoc {
+export function openNamedDoc(name: string, seedTitle = ''): LocalDoc {
   const ydoc = new Y.Doc()
-  const persistence = new IndexeddbPersistence(DOC_NAME, ydoc)
+  const persistence = new IndexeddbPersistence(name, ydoc)
   const fragment = ydoc.getXmlFragment(FRAGMENT_KEY)
   const title = ydoc.getText('title')
 
   const ready = persistence.whenSynced.then(() => {
+    if (seedTitle && title.length === 0) title.insert(0, seedTitle)
     seedIfNeeded(fragment, title)
   })
 

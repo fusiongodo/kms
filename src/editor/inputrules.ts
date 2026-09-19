@@ -1,6 +1,7 @@
 import { InputRule, inputRules } from 'prosemirror-inputrules'
 import { TextSelection } from 'prosemirror-state'
-import { schema } from './schema'
+import { createPage } from '../pages/workspace'
+import { createPageLink, createParagraph, schema } from './schema'
 import { newBlockId } from './ids'
 
 function headingRule(level: 1 | 2 | 3) {
@@ -37,6 +38,23 @@ const toggleRule = new InputRule(/^\/tog(gle)?$/, (state, _match, start, end) =>
   return tr
 })
 
+const pageRule = new InputRule(/^\/page$/, (state, _match, start, end) => {
+  const { $from } = state.selection
+  if (!$from.parent.type.isTextblock) return null
+  if ($from.parent.type === schema.nodes.toggle_title) return null
+  const pos = $from.before()
+  const node = $from.parent
+  const leftover = node.content
+    .cut(0, start - $from.start())
+    .append(node.content.cut(end - $from.start()))
+  const title = leftover.textBetween(0, leftover.size, ' ').trim() || 'Untitled'
+  const page = createPage(title)
+  const link = createPageLink(page.id, page.title, node.attrs.id || newBlockId())
+  const tr = state.tr.replaceWith(pos, pos + node.nodeSize, [link, createParagraph()])
+  tr.setSelection(TextSelection.near(tr.doc.resolve(pos + link.nodeSize + 1)))
+  return tr
+})
+
 const bulletRule = new InputRule(/^\s*[-*+]\s$/, (state, _match, start, end) => {
   const { $from } = state.selection
   if (!$from.parent.type.isTextblock) return null
@@ -63,6 +81,7 @@ export function editorInputRules() {
       headingRule(2),
       headingRule(3),
       toggleRule,
+      pageRule,
     ],
   })
 }

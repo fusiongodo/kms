@@ -145,6 +145,41 @@ export const schema = new Schema({
       group: 'inline',
     },
 
+    page_link: {
+      group: 'block',
+      atom: true,
+      selectable: true,
+      draggable: true,
+      attrs: {
+        ...idAttr,
+        pageId: { default: null as string | null },
+        title: { default: 'Untitled' },
+      },
+      parseDOM: [
+        {
+          tag: 'div[data-page-id]',
+          getAttrs: (dom) => {
+            const el = dom as HTMLElement
+            return {
+              id: el.getAttribute('data-block-id') || null,
+              pageId: el.getAttribute('data-page-id'),
+              title: el.getAttribute('data-page-title') || el.textContent || 'Untitled',
+            }
+          },
+        },
+      ],
+      toDOM: (node) => [
+        'div',
+        {
+          'data-page-id': node.attrs.pageId,
+          'data-page-title': node.attrs.title,
+          'data-block-id': node.attrs.id,
+          class: 'block page-link',
+        },
+        node.attrs.title || 'Untitled',
+      ],
+    },
+
     hard_break: {
       inline: true,
       group: 'inline',
@@ -208,4 +243,8 @@ export function createListItem(text = '') {
 
 export function createBulletList(text = '') {
   return schema.node('bullet_list', null, [createListItem(text)])
+}
+
+export function createPageLink(pageId: string, title: string, id = newBlockId()) {
+  return schema.node('page_link', { id, pageId, title })
 }
