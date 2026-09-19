@@ -1,0 +1,266 @@
+:root {
+  --bg: #f6f4ef;
+  --page: #fffcf7;
+  --ink: #1c1916;
+  --muted: #6f675e;
+  --line: #e4ddd2;
+  --accent: #2f5d4a;
+  --accent-soft: #e7f0eb;
+  --caret: #3d6b56;
+  --shadow: 0 18px 50px rgba(40, 32, 20, 0.08);
+  --sans: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --ui: 'Segoe UI', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 var(--ui);
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar,
+.hints {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.topbar {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-weight: 650;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+.status[data-ready='true'] {
+  color: var(--accent);
+}
+
+.page {
+  width: min(760px, calc(100% - 32px));
+  margin: 28px auto 80px;
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 36px 48px 64px;
+}
+
+.page-title {
+  margin: 0 0 20px;
+  font: 700 40px/1.15 var(--sans);
+  outline: none;
+  min-height: 48px;
+}
+
+.page-title:empty::before {
+  content: attr(data-placeholder);
+  color: #b4aa9c;
+}
+
+.page-loading,
+.page-error {
+  margin: 0;
+  color: var(--muted);
+}
+
+.page-error {
+  color: #8a2d2d;
+}
+
+.editor-mount {
+  min-height: 50vh;
+}
+
+.ProseMirror {
+  outline: none;
+  font: 19px/1.65 var(--sans);
+}
+
+.ProseMirror .block {
+  margin: 0 0 6px;
+}
+
+.ProseMirror p {
+  margin: 0;
+  min-height: 1.65em;
+}
+
+.ProseMirror .heading-1 {
+  font-size: 30px;
+  line-height: 1.25;
+  margin: 18px 0 8px;
+}
+
+.ProseMirror .heading-2 {
+  font-size: 24px;
+  line-height: 1.3;
+  margin: 16px 0 6px;
+}
+
+.ProseMirror .heading-3 {
+  font-size: 20px;
+  line-height: 1.35;
+  margin: 14px 0 4px;
+}
+
+.ProseMirror .bullet-list {
+  margin: 4px 0;
+  padding-left: 1.2em;
+}
+
+.ProseMirror .list-item {
+  margin: 2px 0;
+}
+
+.ProseMirror .toggle {
+  position: relative;
+  padding-left: 26px;
+  margin: 8px 0;
+}
+
+.ProseMirror .toggle-caret {
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--caret);
+  cursor: pointer;
+}
+
+.ProseMirror .toggle-caret::before {
+  content: '▾';
+  display: block;
+  font-size: 14px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.ProseMirror .toggle.is-collapsed .toggle-caret::before {
+  content: '▸';
+}
+
+.ProseMirror .toggle-title {
+  font-weight: 650;
+  min-height: 1.5em;
+}
+
+.ProseMirror .toggle-title:empty::before {
+  content: 'Toggle';
+  color: #b4aa9c;
+}
+
+.ProseMirror .toggle-body {
+  margin-top: 4px;
+  padding-left: 2px;
+}
+
+.ProseMirror .toggle.is-collapsed .toggle-body {
+  display: none;
+}
+
+.ProseMirror strong {
+  font-weight: 750;
+}
+
+.slash-menu {
+  position: fixed;
+  z-index: 20;
+  min-width: 240px;
+  padding: 6px;
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.slash-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: 14px/1.4 var(--ui);
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.slash-item.is-active,
+.slash-item:hover {
+  background: var(--accent-soft);
+}
+
+.slash-hint {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.slash-empty {
+  padding: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.hints {
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+}
+
+.hints span {
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .page {
+    width: calc(100% - 16px);
+    margin: 12px auto 48px;
+    padding: 22px 18px 40px;
+    border-radius: 14px;
+  }
+
+  .page-title {
+    font-size: 30px;
+  }
+
+  .ProseMirror {
+    font-size: 17px;
+  }
+
+  .topbar,
+  .hints {
+    padding: 10px 12px;
+  }
+}
