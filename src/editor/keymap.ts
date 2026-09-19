@@ -19,8 +19,14 @@ export function editorKeymap() {
     'Mod-i': toggleMark(schema.marks.em),
     Enter: splitBlockWithNewId(),
     'Shift-Enter': insertHardBreak(),
-    Tab: indentBlock(),
-    'Shift-Tab': outdentBlock(),
+    Tab: (state, dispatch, view) => {
+      indentBlock()(state, dispatch, view)
+      return true
+    },
+    'Shift-Tab': (state, dispatch, view) => {
+      outdentBlock()(state, dispatch, view)
+      return true
+    },
     Backspace: chainCommands(
       deleteSelection,
       joinBackwardRespectingIds(),

@@ -17,10 +17,10 @@ export function createEditorView(mount: HTMLElement, fragment: XmlFragment) {
     doc,
     schema,
     plugins: [
+      slashPlugin(),
       editorKeymap(),
       editorInputRules(),
       ensureBlockIds(),
-      slashPlugin(),
       ySyncPlugin(fragment, { mapping }),
       yUndoPlugin({ protectedNodes }),
       yUndoKeymap(),
