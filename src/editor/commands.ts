@@ -1,7 +1,6 @@
 import { TextSelection, type Command, type EditorState, type Transaction } from 'prosemirror-state'
 import { Fragment, type Node as PMNode, type NodeType, type ResolvedPos } from 'prosemirror-model'
 import { canSplit } from 'prosemirror-transform'
-import { liftListItem, splitListItem, wrapInList } from 'prosemirror-schema-list'
 import { schema, createParagraph, createToggle, isCollapsed } from './schema'
 import { newBlockId } from './ids'
 
@@ -71,7 +70,25 @@ export function convertToToggle(): Command {
 }
 
 export function wrapInBulletList(): Command {
-  return wrapInList(schema.nodes.bullet_list)
+  return (state, dispatch) => {
+    const { $from } = state.selection
+    if (!$from.parent.type.isTextblock) return false
+    if ($from.parent.type === schema.nodes.toggle_title) return false
+    if ($from.node(-1)?.type === schema.nodes.list_item) return false
+
+    const pos = $from.before()
+    const node = $from.parent
+    const item = schema.node('list_item', { id: node.attrs.id || newBlockId() }, [
+      schema.node('paragraph', { id: newBlockId() }, node.content),
+    ])
+    const list = schema.node('bullet_list', null, [item])
+    if (dispatch) {
+      const tr = state.tr.replaceWith(pos, pos + node.nodeSize, list)
+      tr.setSelection(TextSelection.near(tr.doc.resolve(pos + 2)))
+      dispatch(tr.scrollIntoView())
+    }
+    return true
+  }
 }
 
 function insertParagraphAfter(
@@ -97,12 +114,8 @@ export function splitBlockWithNewId(): Command {
       return splitToggleTitle()(state, dispatch)
     }
 
-    const listItem = schema.nodes.list_item
-    if ($from.node(-1)?.type === listItem) {
-      if ($from.parent.content.size === 0) {
-        return liftListItem(listItem)(state, dispatch)
-      }
-      return splitListItem(listItem, { id: newBlockId() })(state, dispatch)
+    if (listItemDepth($from) >= 0) {
+      return splitListItemAtCursor()(state, dispatch)
     }
 
     if (!$from.parent.type.isTextblock) return false
@@ -125,6 +138,96 @@ export function splitBlockWithNewId(): Command {
     if (dispatch) {
       dispatch(state.tr.split($from.pos, 1, [{ type, attrs }]).scrollIntoView())
     }
+    return true
+  }
+}
+
+function listItemDepth($from: ResolvedPos): number {
+  for (let d = $from.depth; d > 0; d--) {
+    if ($from.node(d).type === schema.nodes.list_item) return d
+  }
+  return -1
+}
+
+function exitEmptyListItem(itemDepth: number): Command {
+  return (state, dispatch) => {
+    const { $from } = state.selection
+    const item = $from.node(itemDepth)
+    const itemPos = $from.before(itemDepth)
+    const listDepth = itemDepth - 1
+    const list = $from.node(listDepth)
+    const listPos = $from.before(listDepth)
+    const para = createParagraph()
+
+    if (!dispatch) return true
+
+    if (list.childCount === 1) {
+      const tr = state.tr.replaceWith(listPos, listPos + list.nodeSize, para)
+      tr.setSelection(TextSelection.create(tr.doc, listPos + 1))
+      dispatch(tr.scrollIntoView())
+      return true
+    }
+
+    const index = $from.index(listDepth)
+    const tr = state.tr.delete(itemPos, itemPos + item.nodeSize)
+    if (index === list.childCount - 1) {
+      const afterList = tr.mapping.map(listPos + list.nodeSize)
+      tr.insert(afterList, para)
+      tr.setSelection(TextSelection.create(tr.doc, afterList + 1))
+    } else {
+      const insertAt = tr.mapping.map(itemPos)
+      tr.insert(insertAt, para)
+      tr.setSelection(TextSelection.create(tr.doc, insertAt + 1))
+    }
+    dispatch(tr.scrollIntoView())
+    return true
+  }
+}
+
+function splitListItemAtCursor(): Command {
+  return (state, dispatch) => {
+    const { $from, empty } = state.selection
+    if (!empty) return false
+    const itemDepth = listItemDepth($from)
+    if (itemDepth < 0) return false
+
+    const item = $from.node(itemDepth)
+    if ($from.parent.content.size === 0 && item.childCount === 1) {
+      return exitEmptyListItem(itemDepth)(state, dispatch)
+    }
+
+    if (!dispatch) return true
+
+    const itemPos = $from.before(itemDepth)
+    const index = $from.index(itemDepth)
+    const offset = $from.parentOffset
+    const leftNodes: PMNode[] = []
+    const rightNodes: PMNode[] = []
+
+    for (let i = 0; i < item.childCount; i++) {
+      const child = item.child(i)
+      if (i < index) {
+        leftNodes.push(child)
+      } else if (i > index) {
+        rightNodes.push(child)
+      } else if (child.type.isTextblock) {
+        leftNodes.push(child.type.create(child.attrs, child.content.cut(0, offset), child.marks))
+        rightNodes.push(
+          schema.nodes.paragraph.create({ id: newBlockId() }, child.content.cut(offset)),
+        )
+      } else {
+        leftNodes.push(child)
+      }
+    }
+
+    if (leftNodes.length === 0) leftNodes.push(createParagraph())
+    if (rightNodes.length === 0) rightNodes.push(createParagraph())
+
+    const left = item.type.create(item.attrs, leftNodes)
+    const right = item.type.create({ id: newBlockId() }, rightNodes)
+    const tr = state.tr.replaceWith(itemPos, itemPos + item.nodeSize, [left, right])
+    tr.setSelection(TextSelection.near(tr.doc.resolve(itemPos + left.nodeSize + 1)))
+    dispatch(tr.scrollIntoView())
     return true
   }
 }
