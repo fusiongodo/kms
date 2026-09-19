@@ -10,7 +10,12 @@ import {
 } from 'prosemirror-commands'
 import { undo, redo } from 'y-prosemirror'
 import { schema } from './schema'
-import { insertHardBreak, joinBackwardRespectingIds, splitBlockWithNewId } from './commands'
+import {
+  insertHardBreak,
+  joinBackwardRespectingIds,
+  skipCollapsedToggleBody,
+  splitBlockWithNewId,
+} from './commands'
 import { indentBlock, outdentBlock } from './indent'
 
 export function editorKeymap() {
@@ -18,6 +23,7 @@ export function editorKeymap() {
     'Mod-b': toggleMark(schema.marks.strong),
     'Mod-i': toggleMark(schema.marks.em),
     Enter: splitBlockWithNewId(),
+    ArrowDown: skipCollapsedToggleBody(1),
     'Shift-Enter': insertHardBreak(),
     Tab: (state, dispatch, view) => {
       indentBlock()(state, dispatch, view)

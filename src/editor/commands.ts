@@ -2,7 +2,7 @@ import { TextSelection, type Command, type EditorState, type Transaction } from 
 import { Fragment, type Node as PMNode, type NodeType, type ResolvedPos } from 'prosemirror-model'
 import { canSplit } from 'prosemirror-transform'
 import { liftListItem, splitListItem, wrapInList } from 'prosemirror-schema-list'
-import { schema, createParagraph, createToggle } from './schema'
+import { schema, createParagraph, createToggle, isCollapsed } from './schema'
 import { newBlockId } from './ids'
 
 export function setBlockTypeKeepingId(
@@ -129,6 +129,47 @@ export function splitBlockWithNewId(): Command {
   }
 }
 
+function insertParagraphAfterToggle(
+  togglePos: number,
+  toggle: PMNode,
+  state: EditorState,
+  dispatch?: (tr: Transaction) => void,
+) {
+  if (!dispatch) return true
+  const after = togglePos + toggle.nodeSize
+  const para = createParagraph()
+  const tr = state.tr.insert(after, para)
+  tr.setSelection(TextSelection.create(tr.doc, after + 1))
+  dispatch(tr.scrollIntoView())
+  return true
+}
+
+export function skipCollapsedToggleBody(dir: 1 | -1): Command {
+  return (state, dispatch) => {
+    const { $from } = state.selection
+    if ($from.parent.type !== schema.nodes.toggle_title) return false
+    const toggleDepth = $from.depth - 1
+    const toggle = $from.node(toggleDepth)
+    if (toggle.type !== schema.nodes.toggle) return false
+    if (!isCollapsed(toggle.attrs.collapsed)) return false
+
+    const togglePos = $from.before(toggleDepth)
+    if (dir < 0) return false
+    const after = togglePos + toggle.nodeSize
+    if (after >= state.doc.content.size) {
+      return insertParagraphAfterToggle(togglePos, toggle, state, dispatch)
+    }
+    if (dispatch) {
+      dispatch(
+        state.tr
+          .setSelection(TextSelection.near(state.doc.resolve(after), 1))
+          .scrollIntoView(),
+      )
+    }
+    return true
+  }
+}
+
 function splitToggleTitle(): Command {
   return (state, dispatch) => {
     const { $from } = state.selection
@@ -139,6 +180,10 @@ function splitToggleTitle(): Command {
     if (toggle.type !== schema.nodes.toggle) return false
 
     const togglePos = $from.before(toggleDepth)
+    if (isCollapsed(toggle.attrs.collapsed)) {
+      return insertParagraphAfterToggle(togglePos, toggle, state, dispatch)
+    }
+
     const title = toggle.child(0)
     const body = toggle.child(1)
     const offset = $from.parentOffset
