@@ -19,7 +19,8 @@ The first block is the page heading. Every paragraph, heading, list item, toggle
 
 - `/h1` `/h2` `/h3` — headings, also via the `/` menu
 - `/tog` — nestable toggle; children stay in the document when collapsed
-- `/page` — create a clickable page element; click opens that page
+- `+` — mention another page by name; typing filters the list. Click the mention to open that page
+- `/page` — create a new page and a link to it
 - Alt+← — go back to the previous page (same as the browser back stack)
 - `- ` — bullet list
 - Tab / Shift+Tab — nest lists, nest a block into the previous toggle, or lift out
@@ -41,6 +42,6 @@ Search, history UI, paste links/images, theme, sidebar, spaces, and any network 
 
 Toggles are `toggle > toggle_title + toggle_body`. Nesting is real child nodes. `collapsed` is an attribute on the same node, so children are not dropped when the toggle is closed.
 
-Page links are atom `page_link` nodes with a `pageId`. Click (or Enter when selected) navigates.
+Page links are atom `page_link` nodes with a `pageId`. `+name` inserts an inline `page_mention` to an existing page. Click (or Enter when selected) navigates.
 
 IDs are attributes on the element nodes. Split assigns a new id to the new element. Merge keeps the first element's id.

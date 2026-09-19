@@ -7,8 +7,9 @@ import { ensureBlockIds } from './ids'
 import { editorKeymap, yUndoKeymap } from './keymap'
 import { editorInputRules } from './inputrules'
 import { slashPlugin } from './slash'
+import { mentionPlugin } from './mention'
 import { placeholderPlugin } from './placeholders'
-import { PageLinkView, ToggleView } from './nodeviews'
+import { PageLinkView, PageMentionView, ToggleView } from './nodeviews'
 import { titleSyncPlugin } from './titleSync'
 import type { EditorHooks } from './hooks'
 
@@ -32,6 +33,7 @@ export function createEditorView(mount: HTMLElement, fragment: XmlFragment, hook
     doc,
     schema,
     plugins: [
+      mentionPlugin(hooks.pageId),
       slashPlugin(),
       editorKeymap(hooks),
       editorInputRules(),
@@ -49,6 +51,7 @@ export function createEditorView(mount: HTMLElement, fragment: XmlFragment, hook
     nodeViews: {
       toggle: (node, view, getPos) => new ToggleView(node, view, getPos),
       page_link: (node, view, getPos) => new PageLinkView(node, view, getPos, hooks.onOpenPage),
+      page_mention: (node, view, getPos) => new PageMentionView(node, view, getPos, hooks.onOpenPage),
     },
     attributes: {
       class: 'ProseMirror page-doc',

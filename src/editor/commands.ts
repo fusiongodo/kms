@@ -95,7 +95,12 @@ export function openSelectedPage(open: (pageId: string) => void): Command {
   return (state) => {
     if (!(state.selection instanceof NodeSelection)) return false
     const node = state.selection.node
-    if (node.type !== schema.nodes.page_link || !node.attrs.pageId) return false
+    if (
+      (node.type !== schema.nodes.page_link && node.type !== schema.nodes.page_mention) ||
+      !node.attrs.pageId
+    ) {
+      return false
+    }
     open(node.attrs.pageId)
     return true
   }

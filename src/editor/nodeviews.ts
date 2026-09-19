@@ -127,3 +127,58 @@ export class PageLinkView implements NodeView {
     this.unwatch()
   }
 }
+
+export class PageMentionView implements NodeView {
+  dom: HTMLElement
+  unwatch: () => void
+
+  constructor(
+    private node: PMNode,
+    _view: EditorView,
+    _getPos: () => number | undefined,
+    private openPage: (pageId: string) => void,
+  ) {
+    this.dom = document.createElement('span')
+    this.dom.className = 'page-mention'
+    this.dom.setAttribute('data-page-mention', '')
+    this.dom.setAttribute('role', 'link')
+    this.dom.tabIndex = 0
+    this.paint(node.attrs.pageId, node.attrs.title)
+
+    this.dom.addEventListener('mousedown', (event) => {
+      event.preventDefault()
+    })
+    this.dom.addEventListener('click', (event) => {
+      event.preventDefault()
+      const pageId = this.node.attrs.pageId
+      if (pageId) this.openPage(pageId)
+    })
+
+    this.unwatch = watchPageTitle((id, title) => {
+      if (id === this.node.attrs.pageId) this.paint(id, title)
+    })
+  }
+
+  private paint(pageId: string | null, fallback: string) {
+    const title = (pageId && getPageTitle(pageId)) || fallback || 'Untitled'
+    this.dom.textContent = title
+    this.dom.setAttribute('data-page-id', pageId ?? '')
+    this.dom.setAttribute('data-page-title', title)
+    this.dom.setAttribute('aria-label', `Open ${title}`)
+  }
+
+  update(node: PMNode) {
+    if (node.type.name !== 'page_mention') return false
+    this.node = node
+    this.paint(node.attrs.pageId, node.attrs.title)
+    return true
+  }
+
+  ignoreMutation() {
+    return true
+  }
+
+  destroy() {
+    this.unwatch()
+  }
+}

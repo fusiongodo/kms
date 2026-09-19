@@ -40,6 +40,28 @@ export function getPageTitle(id: string) {
   return pagesMap?.get(id) || 'Untitled'
 }
 
+export function listPages(excludeId?: string): PageMeta[] {
+  if (!pagesMap) return []
+  const pages: PageMeta[] = []
+  pagesMap.forEach((title, id) => {
+    if (excludeId && id === excludeId) return
+    pages.push({ id, title })
+  })
+  return pages.sort((a, b) => a.title.localeCompare(b.title))
+}
+
+export function filterPages(query: string, excludeId?: string): PageMeta[] {
+  const pages = listPages(excludeId)
+  const q = query.trim().toLowerCase()
+  if (!q) return pages
+  const starts = pages.filter((page) => page.title.toLowerCase().startsWith(q))
+  const rest = pages.filter(
+    (page) =>
+      !page.title.toLowerCase().startsWith(q) && page.title.toLowerCase().includes(q),
+  )
+  return starts.concat(rest)
+}
+
 export function setPageTitle(id: string, title: string) {
   if (!pagesMap) return
   const next = title.trim() || 'Untitled'

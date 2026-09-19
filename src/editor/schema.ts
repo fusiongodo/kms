@@ -145,6 +145,39 @@ export const schema = new Schema({
       group: 'inline',
     },
 
+    page_mention: {
+      inline: true,
+      group: 'inline',
+      atom: true,
+      selectable: true,
+      attrs: {
+        pageId: { default: null as string | null },
+        title: { default: 'Untitled' },
+      },
+      parseDOM: [
+        {
+          tag: 'span[data-page-mention]',
+          getAttrs: (dom) => {
+            const el = dom as HTMLElement
+            return {
+              pageId: el.getAttribute('data-page-id'),
+              title: el.getAttribute('data-page-title') || el.textContent || 'Untitled',
+            }
+          },
+        },
+      ],
+      toDOM: (node) => [
+        'span',
+        {
+          'data-page-mention': '',
+          'data-page-id': node.attrs.pageId,
+          'data-page-title': node.attrs.title,
+          class: 'page-mention',
+        },
+        node.attrs.title || 'Untitled',
+      ],
+    },
+
     page_link: {
       group: 'block',
       atom: true,
@@ -247,4 +280,8 @@ export function createBulletList(text = '') {
 
 export function createPageLink(pageId: string, title: string, id = newBlockId()) {
   return schema.node('page_link', { id, pageId, title })
+}
+
+export function createPageMention(pageId: string, title: string) {
+  return schema.node('page_mention', { pageId, title })
 }

@@ -137,7 +137,8 @@
   </main>
 
   <footer class="hints">
-    <span>/page</span>
+    <span>+ page</span>
+    <span>/page new</span>
     <span>Alt+← back</span>
     <span>/h1 /h2 /h3 /tog</span>
     <span>- list</span>
