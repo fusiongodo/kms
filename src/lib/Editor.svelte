@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy, onMount } from 'svelte'
   import type { EditorView } from 'prosemirror-view'
   import type { XmlFragment } from 'yjs'
   import { createEditorView } from '../editor/createEditor'
@@ -12,7 +11,6 @@
 
   let { fragment }: { fragment: XmlFragment } = $props()
 
-  let host: HTMLDivElement | undefined
   let view: EditorView | undefined
   let slash: SlashState | undefined = $state()
   let menuPos = $state({ top: 0, left: 0 })
@@ -33,26 +31,27 @@
     syncSlash(view)
   }
 
-  onMount(() => {
-    if (!host) return
-    view = createEditorView(host, fragment)
-    const original = view.dispatch
-    view.dispatch = (tr) => {
-      original.call(view, tr)
-      if (view) syncSlash(view)
+  function mountEditor(node: HTMLDivElement) {
+    const next = createEditorView(node, fragment)
+    view = next
+    const original = next.dispatch.bind(next)
+    next.dispatch = (tr) => {
+      original(tr)
+      syncSlash(next)
     }
-    syncSlash(view)
-    view.focus()
-  })
-
-  onDestroy(() => {
-    view?.destroy()
-    view = undefined
-  })
+    syncSlash(next)
+    next.focus()
+    return {
+      destroy() {
+        if (view === next) view = undefined
+        next.destroy()
+      },
+    }
+  }
 </script>
 
 <div class="editor-shell">
-  <div class="editor-mount" bind:this={host}></div>
+  <div class="editor-mount" use:mountEditor></div>
 </div>
 
 {#if slash?.active}

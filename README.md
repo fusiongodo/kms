@@ -15,7 +15,7 @@ Opens on `http://127.0.0.1:45217`. Reload keeps the page.
 
 ## Sprint 1
 
-Every paragraph, heading, list item, and toggle is an element with a stable `id`.
+The first block is the page heading. Every paragraph, heading, list item, and toggle is an element with a stable `id`.
 
 - `/h1` `/h2` `/h3` — headings, also via the `/` menu
 - `/tog` — nestable toggle; children stay in the document when collapsed

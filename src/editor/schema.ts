@@ -173,8 +173,12 @@ export const schema = new Schema({
   },
 })
 
-export function createEmptyDoc() {
+export function createEmptyDoc(title = '') {
+  const heading = title
+    ? schema.node('heading', { id: newBlockId(), level: 1 }, [schema.text(title)])
+    : schema.node('heading', { id: newBlockId(), level: 1 }, [])
   return schema.node('doc', null, [
+    heading,
     schema.node('paragraph', { id: newBlockId() }, []),
   ])
 }

@@ -15,6 +15,33 @@ export type LocalDoc = {
   destroy: () => void
 }
 
+function isEmptyXmlNode(node: unknown): boolean {
+  if (node instanceof Y.XmlText) return node.length === 0
+  if (!(node instanceof Y.XmlElement)) return false
+  if (node.length === 0) return true
+  return node.toArray().every((child) => isEmptyXmlNode(child))
+}
+
+function seedIfNeeded(fragment: Y.XmlFragment, title: Y.Text) {
+  const heading = title.toString()
+  if (fragment.length === 0) {
+    prosemirrorToYXmlFragment(createEmptyDoc(heading), fragment)
+    return
+  }
+
+  const first = fragment.get(0)
+  const onlyEmptyParagraph =
+    fragment.length === 1 &&
+    first instanceof Y.XmlElement &&
+    first.nodeName === 'paragraph' &&
+    isEmptyXmlNode(first)
+
+  if (onlyEmptyParagraph) {
+    fragment.delete(0, 1)
+    prosemirrorToYXmlFragment(createEmptyDoc(heading), fragment)
+  }
+}
+
 export function openLocalDoc(): LocalDoc {
   const ydoc = new Y.Doc()
   const persistence = new IndexeddbPersistence(DOC_NAME, ydoc)
@@ -22,9 +49,7 @@ export function openLocalDoc(): LocalDoc {
   const title = ydoc.getText('title')
 
   const ready = persistence.whenSynced.then(() => {
-    if (fragment.length === 0) {
-      prosemirrorToYXmlFragment(createEmptyDoc(), fragment)
-    }
+    seedIfNeeded(fragment, title)
   })
 
   return {

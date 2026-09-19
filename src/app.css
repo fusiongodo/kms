@@ -70,16 +70,16 @@ body {
   padding: 36px 48px 64px;
 }
 
-.page-title {
-  margin: 0 0 20px;
-  font: 700 40px/1.15 var(--sans);
-  outline: none;
-  min-height: 48px;
+.ProseMirror.is-empty,
+.ProseMirror .is-empty {
+  position: relative;
 }
 
-.page-title:empty::before {
+.ProseMirror .is-empty::before {
   content: attr(data-placeholder);
   color: #b4aa9c;
+  pointer-events: none;
+  position: absolute;
 }
 
 .page-loading,
@@ -114,6 +114,13 @@ body {
   font-size: 30px;
   line-height: 1.25;
   margin: 18px 0 8px;
+}
+
+.ProseMirror > .heading-1:first-child {
+  font-size: 40px;
+  line-height: 1.15;
+  margin: 0 0 20px;
+  font-weight: 700;
 }
 
 .ProseMirror .heading-2 {

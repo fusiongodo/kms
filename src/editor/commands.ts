@@ -1,5 +1,6 @@
-import { TextSelection, type Command } from 'prosemirror-state'
-import { Fragment, type Node as PMNode, type NodeType } from 'prosemirror-model'
+import { TextSelection, type Command, type EditorState, type Transaction } from 'prosemirror-state'
+import { Fragment, type Node as PMNode, type NodeType, type ResolvedPos } from 'prosemirror-model'
+import { canSplit } from 'prosemirror-transform'
 import { liftListItem, splitListItem, wrapInList } from 'prosemirror-schema-list'
 import { schema, createParagraph, createToggle } from './schema'
 import { newBlockId } from './ids'
@@ -73,6 +74,20 @@ export function wrapInBulletList(): Command {
   return wrapInList(schema.nodes.bullet_list)
 }
 
+function insertParagraphAfter(
+  $from: ResolvedPos,
+  state: EditorState,
+  dispatch?: (tr: Transaction) => void,
+) {
+  if (!dispatch) return true
+  const after = $from.after()
+  const para = createParagraph()
+  const tr = state.tr.insert(after, para)
+  tr.setSelection(TextSelection.create(tr.doc, after + 1))
+  dispatch(tr.scrollIntoView())
+  return true
+}
+
 export function splitBlockWithNewId(): Command {
   return (state, dispatch) => {
     const { $from, empty } = state.selection
@@ -92,18 +107,22 @@ export function splitBlockWithNewId(): Command {
 
     if (!$from.parent.type.isTextblock) return false
 
-    if ($from.parent.content.size === 0 && $from.parent.type === schema.nodes.heading) {
-      return convertToParagraph()(state, dispatch)
+    const atEnd = $from.parentOffset === $from.parent.content.size
+    if (atEnd) {
+      return insertParagraphAfter($from, state, dispatch)
+    }
+
+    const type = $from.parent.type
+    const attrs =
+      type === schema.nodes.heading
+        ? { id: newBlockId(), level: $from.parent.attrs.level }
+        : { id: newBlockId() }
+
+    if (!canSplit(state.doc, $from.pos, 1, [{ type, attrs }])) {
+      return insertParagraphAfter($from, state, dispatch)
     }
 
     if (dispatch) {
-      const atEnd = $from.parentOffset === $from.parent.content.size
-      const type = atEnd ? schema.nodes.paragraph : $from.parent.type
-      const attrs =
-        type === schema.nodes.heading
-          ? { id: newBlockId(), level: $from.parent.attrs.level }
-          : { id: newBlockId() }
-
       dispatch(state.tr.split($from.pos, 1, [{ type, attrs }]).scrollIntoView())
     }
     return true
